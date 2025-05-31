@@ -11,5 +11,6 @@ class UserRead(BaseModel):
     created_in: datetime
     updated_in: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
