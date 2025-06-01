@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 import models
 import schemas
 from datetime import datetime, timezone
+import json
 
 app = FastAPI()
 
@@ -30,8 +31,8 @@ def read_users(db: Session = Depends(get_db)):
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     now = datetime.now(timezone.utc)
     db_user = models.User(
-        name=user.name,
-        email=user.email,
+        name=user.name.strip(),
+        email=user.email.strip().lower(),
         created_in=now,
         updated_in=now
     )
@@ -39,3 +40,30 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+@app.patch("/users/{id}", response_model=schemas.UserRead)
+def update_user(id: int, user: schemas.UserPatch, db: Session = Depends(get_db)):
+    current_user = db.query(models.User).filter(models.User.id == id).first()
+
+    if not current_user:
+        raise HTTPException(status_code=404, detail="User not found") 
+    
+    if user.email:
+        if db.query(models.User).filter(models.User.email == user.email.strip().lower(), models.User.id != id).first():
+            raise HTTPException(status_code=400, detail="Email already in use by another user")
+        current_user.email = user.email.strip().lower()
+        
+    
+    if user.name:
+        current_user.name = user.name.strip()
+
+    if user.name or user.email:
+        now = datetime.now(timezone.utc)
+        current_user.updated_in = now
+    else:
+        raise HTTPException(status_code=400, detail="At least one field must be provided for update")
+
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
