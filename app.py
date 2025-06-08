@@ -4,7 +4,14 @@ from sqlalchemy.orm import Session
 import models
 import schemas
 from datetime import datetime, timezone
-import json
+from dotenv import load_dotenv
+import os
+
+load_dotenv(".env")
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 app = FastAPI()
 
@@ -33,6 +40,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = models.User(
         name=user.name.strip(),
         email=user.email.strip().lower(),
+        password=user.password, 
         created_in=now,
         updated_in=now
     )

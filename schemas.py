@@ -6,6 +6,7 @@ from pydantic import EmailStr
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
+    password: str
 
 class UserRead(BaseModel):
     name: str
@@ -20,6 +21,7 @@ class UserRead(BaseModel):
 class UserPatch(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
+    password: Optional[str] = None
 
     model_config = {
         "from_attributes": True
